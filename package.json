@@ -1,0 +1,30 @@
+{
+  "name": "couchhook",
+  "private": false,
+  "description": "A tool to build scaleable applications.",
+  "version": "0.1.0",
+  "homepage": "https://www.couchook.poppy-circus.de",
+  "author": "poppy-circus",
+  "contributors": [
+    "Tobias Busse <tobias.busse@poppy-circus.de>"
+  ],
+  "maintainers": [],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:poppy-circus/couchook.git"
+  },
+  "scripts": {
+    "test": "jasmine-node --requireJsSetup test/jasmine_node_setup.js test",
+    "test-junit": "jasmine-node --requireJsSetup test/jasmine_node_setup.js test --verbose --junitreport"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "grunt-jasmine-node": "~0.0.6",
+    "grunt-jsdoc-plugin": "~0.1.4",
+    "grunt-requirejs": "~0.2.14",
+    "jasmine-node": "~1.2.2",    
+    "requirejs": "~2.1.0",
+    "madge": "0.1.4"
+  },
+  "optionalDependencies": {}
+}
