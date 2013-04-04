@@ -33,6 +33,8 @@ grunt site
 
 ### Build
 
+After creating couchook, a reference is available at ```window.couchook```
+
 ~~~bash
 grunt install
 ~~~
