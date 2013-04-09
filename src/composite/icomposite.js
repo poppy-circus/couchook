@@ -27,6 +27,15 @@ define(['./icomponent', '../util/lodash'], function(IComponent, lodash) {
     numChildren: 'I',
 
     /**
+     * Get the depth of a composition.
+     *
+     * @name getDepth
+     * @function
+     * @memberOf IComposite#
+     */
+    getDepth: 'I',
+
+    /**
      * Get the index of a subordinated child processed with index+=1.
      *
      * @param {IComponent} child A component to find.

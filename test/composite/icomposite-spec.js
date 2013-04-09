@@ -9,6 +9,7 @@ require(['src/composite/icomposite', 'src/composite/icomponent', 'src/util/lodas
     describe('own interface methods', function() {
       lodash.forEach([
         'numChildren',
+        'getDepth',
         'indexOf',
         'lastIndexOf',
         'getChild',
