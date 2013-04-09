@@ -237,8 +237,58 @@ require(['src/composite/composite_base', 'src/composite/component_base'], functi
         });
       });
 
+      describe('has a method `numChildren`', function() {
+        it('returns the depth of a composition', function() {
+          composite.addChild(component);
+          expect(composite.getDepth()).toBe(1);
+        });
+
+        it('returns `0` if the composition has no childs', function() {
+          expect(composite.getDepth()).toBe(0);
+        });
+
+        describe('depth complexity', function() {
+          it('returns the correct value on multiple childs (flat)', function() {
+            composite.addChild(new CompositeBase('child1'));
+            composite.addChild(new CompositeBase('child2'));
+            composite.addChild(new CompositeBase('child3'));
+            expect(composite.getDepth()).toBe(1);
+          });
+
+          it('returns the correct value on multiple childs with further childs (deep)', function() {
+            var subComposite = new CompositeBase('child1');
+            subComposite.addChild(new CompositeBase('subchild1'));
+
+            composite.addChild(new CompositeBase(subComposite));
+            composite.addChild(new CompositeBase('child2'));
+
+            subComposite = new CompositeBase('child3');
+            subComposite.addChild(new CompositeBase('subchild3'));
+            composite.addChild(subComposite);
+
+            expect(composite.getDepth()).toBe(2);
+          });
+
+          it('returns the correct value on multiple childs with further childs that provide a different depth (complex)', function() {
+            var subComposite = new CompositeBase('child1');
+            subComposite.addChild(new CompositeBase('subchild1'));
+
+            composite.addChild(new CompositeBase(subComposite));
+            composite.addChild(new CompositeBase('child2'));
+
+            subComposite = new CompositeBase('child3');
+            var subsubComposite = new CompositeBase('subchild3');
+            subsubComposite.addChild(new CompositeBase('subsubchild3'));
+            subComposite.addChild(subsubComposite);
+            composite.addChild(subComposite);
+
+            expect(composite.getDepth()).toBe(3);
+          });
+        });
+      });
+
       describe('has a method `dispose`', function() {
-        xit('unsets the parent', function() {
+        it('unsets the parent', function() {
           var parent = {};
           composite.setParent(parent);
           composite.dispose();
@@ -252,7 +302,7 @@ require(['src/composite/composite_base', 'src/composite/component_base'], functi
           expect(composite.numChildren()).toBe(0);
         });
 
-        xit('unsets all deep subordinated childs', function() {
+        it('unsets all deep subordinated childs', function() {
           var deepComposite = new CompositeBase('test-deep-composite');
           deepComposite.addChild(component);
           composite.addChild(deepComposite);
