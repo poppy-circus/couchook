@@ -110,6 +110,28 @@ define(['./icomposite', './component_base', '../util/lodash', '../util/class_uti
   };
 
   /**
+   * Get the depth of the composition.
+   * <p><b>implements </b><i>IComposite#getDepth</i></p>
+   *
+   * @name getDepth
+   * @function
+   * @memberOf CompositeBase#
+   */
+  proto.getDepth = function() {
+    var depth = 0;
+    var container = 0;
+    forEach(this._childs, function(child) {
+      if (child.isContainer()) {
+        container = child.getDepth();
+        if (container > depth) {
+          depth = container;
+        }
+      }
+    });
+    return (this.numChildren() > 0 ?1 :0) + depth;
+  };
+
+  /**
    * Get the index of a subordinated child processed with index+=1.
    * <p><b>implements </b><i>IComposite#indexof</i></p>
    *
