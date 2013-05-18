@@ -63,6 +63,7 @@ module.exports = function(grunt) {
             start: '(function() {',
             end: 'var Couchook = require("couchook.js"); window.couchook = new Couchook();}());'
           },
+          name: '../node_modules/almond/almond',
           out: 'bin/couchook.js',
           optimize: 'uglify'
         }
