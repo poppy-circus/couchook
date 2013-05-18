@@ -19,11 +19,14 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "grunt-jasmine-node": "~0.0.6",
-    "grunt-jsdoc-plugin": "~0.1.4",
-    "grunt-requirejs": "~0.2.14",
-    "jasmine-node": "~1.2.2",    
-    "requirejs": "~2.1.0",
+    "almond": "~0.2.5",
+    "grunt": "~0.4.1",
+    "grunt-contrib-jshint": "~0.4.3",
+    "grunt-contrib-requirejs": "~0.4.0",
+    "grunt-jasmine-node": "~0.1.0",
+    "grunt-jsdoc": "~0.3.2",
+    "jasmine-node": "~1.7.0",
+    "requirejs": "~2.1.5",
     "madge": "0.1.4"
   },
   "optionalDependencies": {}
