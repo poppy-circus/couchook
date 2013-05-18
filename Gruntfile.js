@@ -6,11 +6,8 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
-    lint: {
-      all: ['grunt.js', 'src/**/!(lodash|)*.js', 'test/**/*.js']
-    },
-
     jshint: {
+      all: ['grunt.js', 'src/**/!(lodash|)*.js', 'test/**/*.js'],
       options: {
         browser: true,
         expr: true,
@@ -46,33 +43,39 @@ module.exports = function(grunt) {
     jsdoc : {
       api : {
         src: ['src/**/*', 'README.md'],
-        dest: 'doc/jsdoc'
+        dest: 'doc/jsdoc',
+        options: {
+          destination: 'doc/jsdoc'
+        }
       }
     },
 
     requirejs: {
       install: {
-        baseUrl: 'src',
-        almond: true,
-        include: ['couchook.js'],
-        paths: {
-          package_path: '.'
-        },
-        wrap: {
-          start: '(function() {',
-          end: 'var Couchook = require("couchook.js"); window.couchook = new Couchook();}());'
-        },
-        out: 'bin/couchook.js',
-        optimize: 'uglify'
+        options: {
+          baseUrl: 'src',
+          almond: true,
+          include: ['couchook.js'],
+          paths: {
+            package_path: '.'
+          },
+          wrap: {
+            start: '(function() {',
+            end: 'var Couchook = require("couchook.js"); window.couchook = new Couchook();}());'
+          },
+          out: 'bin/couchook.js',
+          optimize: 'uglify'
+        }
       }
     }
   });
 
   grunt.loadNpmTasks('grunt-jasmine-node');
-  grunt.loadNpmTasks('grunt-jsdoc-plugin');
-  grunt.loadNpmTasks('grunt-requirejs');
+  grunt.loadNpmTasks('grunt-jsdoc');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-requirejs');
 
-  grunt.registerTask('default', ['lint', 'jasmine_node']);
+  grunt.registerTask('default', ['jshint', 'jasmine_node']);
   grunt.registerTask('install', 'Installing couchook', function() {
     grunt.task.run('requirejs:install');
   });
