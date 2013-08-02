@@ -165,25 +165,20 @@ define(['../util/class_util'], function(classUtil) {
    * @function
    * @memberOf EventDispatcher#
    */
-  proto.dispatch = function(type, payload, originType) {
+  proto.dispatch = function(type, payload) {
     if (!type) {
       return false;
     }
 
     var event;
-    var events = this.getListenerByType(type);
-    var dispatched = (events.length > 0);
+    var events = this.getListenerByType(type).concat(this.getListenerByType('*'));
 
     for (var i = 0, len = events.length; i<len; i+=1) {
       event = events[i];
-      event.listener.call(event.scope, payload, {target: this, type: originType || type});
+      event.listener.call(event.scope, payload, {target: this, type: type});
     }
 
-    //allow listen to all events
-    if (type !== '*') {
-      dispatched = dispatched || this.dispatch('*', payload, type);
-    }
-    return dispatched;
+    return events.length > 0;
   };
 
   /**
