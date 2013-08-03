@@ -18,7 +18,8 @@ define(['../util/class_util'], function(classUtil) {
       listener: listener,
       scope: scope,
       priority: options.priority || 0,
-      once: !!options.once
+      once: !!options.once,
+      regExp: !!options.regExp
     };
   };
 
@@ -38,6 +39,11 @@ define(['../util/class_util'], function(classUtil) {
     return registered;
   };
 
+  var regExpToString = function(exp) {
+    var result = exp.toString();
+    return result.substring(1, result.lastIndexOf('/'));
+  };
+
   //--------------------------------------------------------------------------
   //
   //  construct
@@ -51,15 +57,16 @@ define(['../util/class_util'], function(classUtil) {
    *
    * @example
    * <pre>
-   * var sum = 0;
    * var dispatcher = new EventDispatcher();
-   * dispatcher.on('add', function(event, meta) {
-   *   sum += event.value;
-   *   if (sum > 10) {
-   *     meta.target.off(meta.type);
-   *   }   
+   * dispatcher.on('signal', function(event, meta) {
+   *   console.log(meta.type); //signal
+   *   console.log(event); //{foo: 'bar'}
    * });
-   * disaptcher.dispatch('add', {value: 2});
+   * disaptcher.dispatch('signal', {foo: 'bar'});
+   * </pre>
+   *
+   * <pre>
+   * //it also allows to listen to regular expression
    * </pre>
    *
    * @constructor EventDispatcher
@@ -67,6 +74,7 @@ define(['../util/class_util'], function(classUtil) {
    */
   var EventDispatcher = function() {    
     this._events = {};
+    this._eventsRegExp = {};
     return this;
   };
 
@@ -89,14 +97,14 @@ define(['../util/class_util'], function(classUtil) {
    * it again.
    * </p>
    *
-   * @param {String} type The type of the event.
+   * @param {String|RegExp} type The type of the event.
    * A special event type is <i>*</i>. It allows listen to all event types that became
    * dispatched by the EventDispatcher reference.
    * @param {function(Object, Object)} listener The listener function that is called
    * when an event is dispatched.
-   * @param {Object=} scope  Spefifies the <i>this</i> reference in the listener funnction.
+   * @param {Object=} [scope=this] Spefifies the <i>this</i> reference in the listener funnction.
    * The default scope is the EventDispatcher reference.
-   * @param {int=} priority The priority level of the event listener. The priority is 
+   * @param {int=} [priority=0] The priority level of the event listener. The priority is 
    * designated by a signed 32-bit integer. All listeners with priority n are processed 
    * before listeners with a priority of n+1. If two or more listeners share the same
    * priority, they are processed in the order in which they were added. 
@@ -123,17 +131,17 @@ define(['../util/class_util'], function(classUtil) {
    * Register an event listener function to an EventDispatcher object.
    * Adding an event listener once became removed after receiving a signal one time.
    *
-   * @param {String} type The type of the event.
+   * @param {String|RegExp} type The type of the event.
    * @param {function(Object, Object)} listener The listener function that is called
    * when an event is dispatched.
-   * @param {Object=} scope  Spefifies the <i>this</i> reference in the listener funnction.
-   * @param {int=} priority The priority level of the event listener.
+   * @param {Object=} [scope=this] Spefifies the <i>this</i> reference in the listener function.
+   * @param {int=} [priority=0] The priority level of the event listener.
    *
    * @returns {EventDispatcher} the EventDispatcher reference
    * @see EventDispatcher#on
    * @see EventDispatcher#off
    *
-   * @name on
+   * @name once
    * @function
    * @memberOf EventDispatcher#
    */
@@ -198,11 +206,25 @@ define(['../util/class_util'], function(classUtil) {
     }
 
     var event;
-    var events = this.getListenerByType(type).concat(this.getListenerByType('*'));
+    var eventsRegExp = this._eventsRegExp;
 
+    //append concrete and the 'all' (*) listener
+    var events = this.getListenerByType(type)
+      .concat(this.getListenerByType('*'));
+
+    //append regexp listener
+    for (var regExpString in eventsRegExp) {
+      if (eventsRegExp.hasOwnProperty(regExpString)) {
+        if (type.match(new RegExp(regExpString))) {
+          events = events.concat(eventsRegExp[regExpString]);
+        }
+      }
+    }
+
+    //invoke gethered listener
     for (var i = 0, len = events.length; i<len; i+=1) {
       event = events[i];
-      event.listener.call(event.scope, payload, {target: this, type: type});
+      event.listener.call(event.scope, payload || {}, {target: this, type: type});
 
       if (event.once) {
         this.off(type, event.listener);
@@ -210,20 +232,6 @@ define(['../util/class_util'], function(classUtil) {
     }
 
     return events.length > 0;
-  };
-
-  /**
-   * Get the list of all defined event listeners by an event type.
-   * @private
-   * @ignore
-   */
-  proto.getListenerByType = function(type) {
-    var result;
-
-    if (type) {
-      result = this._events[type];
-    }   
-    return result || [];
   };
 
   /**
@@ -246,6 +254,32 @@ define(['../util/class_util'], function(classUtil) {
     return result;
   };
 
+  //--------------------------------------------------------------------------
+  //
+  //  internal methods
+  //
+  //--------------------------------------------------------------------------
+
+  /**
+   * Get the list of all defined event listeners by an event type.
+   * @private
+   * @ignore
+   */
+  proto.getListenerByType = function(type) {
+    var result;
+    var events = this._events;
+    var eventType = type;
+
+    if (type) {
+      if (type.constructor.name === 'RegExp') {
+        events = this._eventsRegExp;
+        eventType = regExpToString(type);
+      }
+      result = events[eventType];
+    }
+    return result || [];
+  };
+
   /**
    * Add an event listener target.
    * @private
@@ -253,13 +287,20 @@ define(['../util/class_util'], function(classUtil) {
    */
   proto._addListener = function(type, listener, scope, options) {
     var events = this.getListenerByType(type);
+    var eventType = type;
 
     if (events.length === 0) {
-      events = this._events[type] = [];
+      if (type.constructor.name === 'RegExp') {
+        eventType = regExpToString(type);
+        events = this._eventsRegExp[eventType] = [];
+        options.regExp = true;
+      } else {
+        events = this._events[eventType] = [];
+      }
     }
 
     if (!hasEvent(events, listener)) {
-      events.push(createEvent(type, listener, scope || this, options));
+      events.push(createEvent(eventType, listener, scope || this, options));
       events.sort(sortOnPriority);
     }
 

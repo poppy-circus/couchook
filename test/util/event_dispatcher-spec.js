@@ -50,6 +50,10 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
           it('has a property `once`', function() {
             expect(dispatcher.getListenerByType('type')[0].once).toBe(true);
           });
+
+          it('has a property `regExp`', function() {
+            expect(dispatcher.getListenerByType('type')[0].regExp).toBe(false);
+          });
         });
       });
 
@@ -75,6 +79,11 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
         it('adds an event listener', function() {
           dispatcher.on('type', function(){});
           expect(dispatcher.hasListener('type')).toBe(true);
+        });
+
+        it('adds an event listener by a regexp', function() {
+          dispatcher.on(/\d+/, function(){});
+          expect(dispatcher.hasListener(/\d+/)).toBe(true);
         });
 
         it('adds a special event listener type `*` to receive all dispatched events', function() {
@@ -139,6 +148,11 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
         it('adds an event listener', function() {
           dispatcher.once('type', function(){});
           expect(dispatcher.hasListener('type')).toBe(true);
+        });
+
+        it('adds an event listener by a regexp', function() {
+          dispatcher.once(/\d+/, function(){});
+          expect(dispatcher.hasListener(/\d+/)).toBe(true);
         });
 
         it('adds a special event listener type `*` to receive all dispatched events', function() {
@@ -233,11 +247,11 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
           expect(fn).toHaveBeenCalled();
         });
 
-        it('triggers an event with further dispatcher details', function() {
+        it('triggers an event with further metadata', function() {
           var fn = jasmine.createSpy('listener');
           dispatcher.on('type', fn);
           dispatcher.dispatch('type');
-          expect(fn).toHaveBeenCalledWith(undefined, {target: dispatcher, type: 'type'});
+          expect(fn).toHaveBeenCalledWith({}, {target: dispatcher, type: 'type'});
         });
 
         it('triggers an event with a payload', function() {
@@ -247,6 +261,13 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
           expect(fn).toHaveBeenCalledWith({foo: 'bar'}, {target: dispatcher, type: 'type'});
         });
 
+        it('triggers an event for the `RegExp` listeners', function() {
+          var fn = jasmine.createSpy('listener');
+          dispatcher.on(/\d+/, fn);
+          dispatcher.dispatch('12345');
+          expect(fn).toHaveBeenCalledWith({}, {target: dispatcher, type: '12345'});
+        });
+
         it('triggers an event for the `*` listeners', function() {
           var fn = jasmine.createSpy('listener');
           dispatcher.on('*', fn);
@@ -254,11 +275,11 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
           expect(fn).toHaveBeenCalledWith({foo: 'bar'}, {target: dispatcher, type: 'type'});
         });
 
-        it('triggers an event with an undefined payload', function() {
+        it('triggers an event with a default payload', function() {
           var fn = jasmine.createSpy('listener');
           dispatcher.on('type', fn);
           dispatcher.dispatch('type');
-          expect(fn).toHaveBeenCalledWith(undefined, {target: dispatcher, type: 'type'});
+          expect(fn).toHaveBeenCalledWith({}, {target: dispatcher, type: 'type'});
         });
 
         it('trigger events in the correct order', function() {
