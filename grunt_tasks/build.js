@@ -117,16 +117,17 @@ module.exports = function(grunt) {
       if (grunt.file.exists('.nexus')) {
         var credentials = grunt.file.readJSON('.nexus');
         if (credentials.host && credentials.user && credentials.pass) {
+          if (!docs) {
+            grunt.task.run('clean:docs');
+          }
           grunt.task.run('nexus');
           asyncDone();
         } else {
-          //nextVersion = grunt.config('deploy.nextVersion'); //reminder
-          grunt.fatal('Credentials incomplete, please provide host, user and pass and continue with grunt nexus or restart with grunt deploy');
+          grunt.fatal('Credentials incomplete, please provide host, user and pass!');
           asyncDone(false);
         }
       } else {
-        //nextVersion = grunt.config('deploy.nextVersion'); //reminder
-        grunt.fatal('No credentials available, please add .nexus file to root folder and continue with grunt nexus or restart with grunt deploy');
+        grunt.fatal('No credentials available, please add .nexus file to root folder!');
         asyncDone(false);
       }
     } else {
@@ -164,26 +165,54 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask(
+    'nexus-upload',
+    'Upload couchook artifact to nexus',
+    function() {
+      var version = grunt.file.readJSON('package.json').version;
+
+      if (grunt.file.exists('.nexus')) {
+        var credentials = grunt.file.readJSON('.nexus');
+        var asyncDone = this.async();
+        exec([
+          'curl -v -F r=releases -F hasPom=false -F e=zip -F g=de.poppy-circus -F a=couchook -F v=' + version + ' ',
+          '-F p=zip -F file=@bin/couchook.zip -u ' + credentials.user + ':' + credentials.pass + ' ' + credentials.host
+        ].join(''), function(error, stdout, stderr) {
+          if (error) {
+            grunt.fatal('Error occurred executing "nexus-upload" ' + version + stderr);
+            asyncDone(false);
+          } else {
+            grunt.log.ok('couchook ' + version + ' uploaded to nexus');
+            asyncDone();
+          }
+        });
+      } else {
+        grunt.fatal('Missing credentials-file ".nexus", upload for couchook ' + version + ' stopped');
+      }
+    }
+  );
+
+  grunt.registerTask(
     'nexus',
     'Package and deploy the couchook build to nexus',
     function() {
       grunt.task.run(
-        'clean:nexus',
         'copy:nexus',
-        'compress:nexus'
+        'compress:nexus',
+        'nexus-upload',
+        'clean:nexus'
       );
     }
   );
 
   grunt.registerTask('deploy', [
-    //'jshint',
-    //'jasmine_node',
+    'jshint',
+    'jasmine_node',
     'prompt:deploy',
-    //'deploy-version',
-    //'deploy-tagname',
-    //'requirejs:install',
-    //'site',
-    'deploy-nexus'
-    //'deploy-next-version'
+    'deploy-version',
+    'deploy-tagname',
+    'requirejs:install',
+    'site',
+    'deploy-nexus',
+    'deploy-next-version'
   ]);
 };

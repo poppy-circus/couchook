@@ -66,6 +66,12 @@ module.exports = function(grunt) {
     },
 
     copy: {
+      nexus: {
+        files: [
+          {src: ['bin/couchook.js'], dest: 'nexus/', filter: 'isFile', expand: true, flatten: true},
+          {src: ['**'], dest: 'nexus/docs', expand: true, cwd: 'doc/'}
+        ]
+      },
       coverage: {
         files: [
           { src: ['**'], dest: 'doc/coverage', expand: true, cwd: 'coverage/lcov-report/'}
@@ -73,8 +79,22 @@ module.exports = function(grunt) {
       }
     },
 
+    compress: {
+      nexus: {
+        options: {
+          archive: 'bin/couchook.zip',
+          mode: 'zip'
+        },
+        files: [
+         {expand: true, src: ['**'], cwd: 'nexus/', dest:'couchook/' + (grunt.file.readJSON('package.json').version) + '/'}
+        ]
+      }
+    },
+
     clean: {
-      coverage: ['coverage']
+      coverage: ['coverage'],
+      nexus: ['nexus'],
+      docs: ['doc']
     },
 
     prompt: {
@@ -186,6 +206,7 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-jasmine-node');
   grunt.loadNpmTasks('grunt-jsdoc');
