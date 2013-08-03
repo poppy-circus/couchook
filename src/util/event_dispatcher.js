@@ -12,12 +12,12 @@ define(['../util/class_util'], function(classUtil) {
     return event1.priority - event2.priority;
   };
 
-  var createEvent = function(type, listener, scope, priority) {
+  var createEvent = function(type, listener, scope, options) {
     return {
       type: type,
       listener: listener,
       scope: scope,
-      priority: priority || 0
+      priority: options.priority || 0
     };
   };
 
@@ -113,17 +113,7 @@ define(['../util/class_util'], function(classUtil) {
       return;
     }
     
-    var events = this.getListenerByType(type);
-
-    if (events.length === 0) {
-      events = this._events[type] = [];
-    }
-
-    if (!hasEvent(events, listener)) {
-      events.push(createEvent(type, listener, scope || this, priority));
-      events.sort(sortOnPriority);
-    }
-
+    this._addEventListener(type, listener, scope, {priority: priority});
     return this;
   };
 
@@ -221,6 +211,27 @@ define(['../util/class_util'], function(classUtil) {
       result = this.getListenerByType(type).length > 0;
     }
     return result;
+  };
+
+  /**
+   * Add an event listener target.
+   * @private
+   * @ignore
+   */
+  proto._addEventListener = function(type, listener, scope, options) {
+    var events = this.getListenerByType(type);
+    options = options || {};
+
+    if (events.length === 0) {
+      events = this._events[type] = [];
+    }
+
+    if (!hasEvent(events, listener)) {
+      events.push(createEvent(type, listener, scope || this, options));
+      events.sort(sortOnPriority);
+    }
+
+    return this;
   };
 
   return EventDispatcher;
