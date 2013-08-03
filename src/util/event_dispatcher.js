@@ -221,6 +221,9 @@ define(['../util/class_util'], function(classUtil) {
       }
     }
 
+    //sort priority
+    events.sort(sortOnPriority);
+
     //invoke gethered listener
     for (var i = 0, len = events.length; i<len; i+=1) {
       event = events[i];
@@ -301,7 +304,6 @@ define(['../util/class_util'], function(classUtil) {
 
     if (!hasEvent(events, listener)) {
       events.push(createEvent(eventType, listener, scope || this, options));
-      events.sort(sortOnPriority);
     }
 
     return this;

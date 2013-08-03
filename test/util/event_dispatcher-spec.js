@@ -114,12 +114,6 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
           expect(dispatcher.getListenerByType('type').length).toBe(2);
         });
 
-        it('sorts listener by priority', function() {
-          dispatcher.on('type', function(){}, null, 2);
-          dispatcher.on('type', function(){}, null, 1);
-          expect(dispatcher.getListenerByType('type')[0].priority).toBe(1);
-        });
-
         it('sets the scope if defined', function() {
           var scope = {};
           dispatcher.once('type', function(){}, scope);
@@ -181,12 +175,6 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
           dispatcher.once('type', function(){});
           dispatcher.once('type', function(){});
           expect(dispatcher.getListenerByType('type').length).toBe(2);
-        });
-
-        it('sorts listener by priority', function() {
-          dispatcher.once('type', function(){}, null, 2);
-          dispatcher.once('type', function(){}, null, 1);
-          expect(dispatcher.getListenerByType('type')[0].priority).toBe(1);
         });
 
         it('sets the scope if defined', function() {
@@ -283,14 +271,15 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
         });
 
         it('trigger events in the correct order', function() {
-          var last = 0;
-          dispatcher.on('type', function(){last = 1;}, null, 1);
-          dispatcher.on('type', function(){last = 2;}, null, 2);
-          dispatcher.dispatch('type');
-          expect(last).toBe(2);
+          var order = [];
+          dispatcher.on('*', function(){ order.push('on-all'); }, null, 1);
+          dispatcher.on(/\d+/, function(){ order.push('on-reg'); }, null, 2);
+          dispatcher.on('12345', function(){ order.push('on'); }, null, 3);
+          dispatcher.dispatch('12345');
+          expect(order).toBe(['on-all', 'on-reg', 'on']);
         });
 
-        it('wont`t triggers if the type is not defined', function() {
+        it('won`t triggers if the type is not defined', function() {
           var fn = jasmine.createSpy('listener');
           dispatcher.on('type', fn);
           dispatcher.dispatch();
