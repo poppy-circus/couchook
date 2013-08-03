@@ -2,12 +2,10 @@ module.exports = function(grunt) {
 
   "use strict";
 
-  var exec = require('child_process').exec;
-
   // Project configuration.
   grunt.initConfig({
     jshint: {
-      all: ['grunt.js', 'src/**/!(lodash|)*.js', 'test/**/*.js'],
+      all: ['grunt.js', 'grunt_tasks/*.js', 'src/**/!(lodash|)*.js', 'test/**/*.js'],
       options: {
         browser: true,
         expr: true,
@@ -90,30 +88,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
 
-  grunt.registerTask('default', ['jshint', 'jasmine_node']);
-  grunt.registerTask('install', 'Installing couchook', function() {
-    grunt.task.run('requirejs:install');
-  });
-  grunt.registerTask('deploy', 'Deploying couchook', function() {
-    grunt.task.run('install');
-    grunt.task.run('site');
-  });
-  grunt.registerTask('site', 'Creating site', function() {
-    grunt.task.run('jsdoc');
-    exec('node node_modules/madge/bin/madge --format amd --exclude "util/lodash|util/class_util" --image doc/dependencies.png src/', function(error, stdout, stderr) {
-      if (error) {
-        grunt.fatal('Error occurred executing "madge": ' + stderr);
-      } else {
-        grunt.log.ok('dependency graph created');
-      }
-    });
+  grunt.loadTasks('grunt_tasks');
 
-    exec('npm test --coverage', function(error, stdout, stderr) {
-      grunt.task.run(
-        'copy:coverage',
-        'clean:coverage'
-      );
-      grunt.log.ok('coverage report created');
-    });
-  });
+  grunt.registerTask('default', ['jshint', 'jasmine_node']);
 };
