@@ -83,7 +83,7 @@ module.exports = function(grunt) {
           questions: [{
             config:  'deploy.includes',
             type:    'checkbox',
-            message: 'Artifact description:',
+            message: 'Deployment details:',
             choices: [
               {
                 value: 'NEXUS',

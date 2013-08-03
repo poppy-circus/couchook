@@ -116,10 +116,18 @@ module.exports = function(grunt) {
     if (nexus) {
       if (grunt.file.exists('.nexus')) {
         var credentials = grunt.file.readJSON('.nexus');
-
+        if (credentials.host && credentials.user && credentials.pass) {
+          grunt.task.run('nexus');
+          asyncDone();
+        } else {
+          //nextVersion = grunt.config('deploy.nextVersion'); //reminder
+          grunt.fatal('Credentials incomplete, please provide host, user and pass and continue with grunt nexus or restart with grunt deploy');
+          asyncDone(false);
+        }
       } else {
-        grunt.log.ok('No credentials available, please add .nexus file to root folder and restart grunt deploy');
-        asyncDone();
+        //nextVersion = grunt.config('deploy.nextVersion'); //reminder
+        grunt.fatal('No credentials available, please add .nexus file to root folder and continue with grunt nexus or restart with grunt deploy');
+        asyncDone(false);
       }
     } else {
       grunt.log.ok('Skip creating nexus artifacts, docs ignored.');
@@ -127,8 +135,8 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('deploy-next-version', 'Deploying couchook - set development version', function() {
-    var version = grunt.config('deploy.nextVersion');
+  grunt.registerTask('deploy-next-version', 'Deploying couchook - set development version', function(version) {
+    version = version || grunt.config('deploy.nextVersion');
     var asyncDone = this.async();
 
     if (version) {
@@ -154,6 +162,18 @@ module.exports = function(grunt) {
       grunt.fatal('No development version found, use or restart grunt deploy');
     }
   });
+
+  grunt.registerTask(
+    'nexus',
+    'Package and deploy the couchook build to nexus',
+    function() {
+      grunt.task.run(
+        'clean:nexus',
+        'copy:nexus',
+        'compress:nexus'
+      );
+    }
+  );
 
   grunt.registerTask('deploy', [
     //'jshint',
