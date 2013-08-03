@@ -1,4 +1,5 @@
 bin
 doc
+coverage
 node_modules
 tmp

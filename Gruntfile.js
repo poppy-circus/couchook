@@ -86,13 +86,16 @@ module.exports = function(grunt) {
   });
   grunt.registerTask('site', 'Creating site', function() {
     grunt.task.run('jsdoc');
-    exec('node node_modules/madge/bin/madge --format amd --exclude "util/lodash|util/class_util" --image doc/dependencies.png src/', 
-      function(error, stdout, stderr) {
-        if (error) {
-          grunt.fatal('Error occurred executing "madge": ' + stderr);
-        } else {
-          grunt.log.ok('dependency graph created');
-        }
-      });
+    exec('node node_modules/madge/bin/madge --format amd --exclude "util/lodash|util/class_util" --image doc/dependencies.png src/', function(error, stdout, stderr) {
+      if (error) {
+        grunt.fatal('Error occurred executing "madge": ' + stderr);
+      } else {
+        grunt.log.ok('dependency graph created');
+      }
+    });
+
+    exec('npm test --coverage', function(error, stdout, stderr) {
+      grunt.log.ok('coverage report created');
+    });
   });
 };
