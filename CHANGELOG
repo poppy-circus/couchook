@@ -1,6 +1,4 @@
-#2013-08-03 21:31 Create tag (v0.1.2) for version 0.1.2
-
-#2013-08-03 21:30 Create tag (v0.1.2) for version 0.1.2
+#2013-08-03 21:40 Create tag (v0.1.4) for version 0.1.4
 
 - Append docs by code coverage
 - Allow regular expressions to be acting as an event type
