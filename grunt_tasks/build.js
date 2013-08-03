@@ -1,4 +1,5 @@
 var exec = require('child_process').exec;
+var moment = require('moment');
 
 module.exports = function(grunt) {
 
@@ -25,6 +26,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('install', 'Installing couchook', function() {
     grunt.task.run(
+      'jshint',
+      'jasmine_node',
       'requirejs:install',
       'site'
     );
@@ -43,16 +46,17 @@ module.exports = function(grunt) {
         var packageJson = grunt.file.readJSON('package.json');
         packageJson.version = deployVersion;
         grunt.file.write('package.json', JSON.stringify(packageJson, null, '  '));
+        grunt.log.ok('package.json updated - ' + deployVersion);
 
         exec([
           'git add package.json && ',
-          'git commit -m "Version updated to ' + deployVersion + '"'
+          'git commit -m "Update version for deployment to ' + deployVersion + '"'
         ].join(''), function(error, stdout, stderr) {
           if (error) {
-            grunt.fatal('Error occurred executing "git add & commit for package.json' + stderr);
+            grunt.fatal('Error occurred while updating to deploy version' + stderr);
             asyncDone(false);
           } else {
-            grunt.log.ok('Version updated to ' + deployVersion);
+            grunt.log.ok('Version updated for deployment ' + deployVersion);
             asyncDone();
           }
         });
@@ -63,26 +67,103 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('deploy-tagname', 'Deploying couchook - create git tag', function() {
-    if (!grunt.config('deploy.tagname')) {
+    var tag = grunt.config('deploy.tagname');
+    var asyncDone = this.async();
+
+    if (!tag) {
       grunt.log.ok('Skip creating git tag.');
+      asyncDone();
     } else {
-      grunt.log.ok('Creating git tag.');
+      var date = moment().format('YYYY-MM-DD HH:mm');
+      var name = 'CHANGELOG';
+      var version = grunt.config('deploy.version');
+      var content = [
+       date + ' Create tag (' + tag + ') for version ' + version,
+        '',
+        ''
+      ].join('\n');
+
+      if (!grunt.file.findup(name)) {
+        grunt.file.write(name, '');
+      }
+
+      grunt.file.write(name, '#' + content + grunt.file.read(name));
+      grunt.log.ok('CHANGELOG updated - ' + content);
+
+      exec([
+        'git add CHANGELOG && ',
+        'git commit -m "Update CHANGELOG for deployment (' + version + ')" && ',
+        'git tag -a ' + tag + ' -m "' + content + '" && ',
+        'git push --tags'
+      ].join(''), function(error, stdout, stderr) {
+        if (error) {
+          grunt.fatal('Error occurred while tagging' + stderr);
+          asyncDone(false);
+        } else {
+          grunt.log.ok('Tag created: ' + tag);
+          asyncDone();
+        }
+      });
     }
   });
 
   grunt.registerTask('deploy-nexus', 'Deploying couchook - copy artifacts to nexus', function() {
-    console.log(grunt.config('deploy.nextVersion'));
+    var artifacts = grunt.config('deploy.includes');
+    var docs = artifacts.indexOf('DOC') > -1;
+    var nexus = artifacts.indexOf('NEXUS') > -1;
+    var asyncDone = this.async();
+
+    if (nexus) {
+      if (grunt.file.exists('.nexus')) {
+        var credentials = grunt.file.readJSON('.nexus');
+
+      } else {
+        grunt.log.ok('No credentials available, please add .nexus file to root folder and restart grunt deploy');
+        asyncDone();
+      }
+    } else {
+      grunt.log.ok('Skip creating nexus artifacts, docs ignored.');
+      asyncDone();
+    }
   });
 
   grunt.registerTask('deploy-next-version', 'Deploying couchook - set development version', function() {
-    console.log(grunt.config('deploy.nextVersion'));
+    var version = grunt.config('deploy.nextVersion');
+    var asyncDone = this.async();
+
+    if (version) {
+      var packageJson = grunt.file.readJSON('package.json');
+      packageJson.version = version;
+      grunt.file.write('package.json', JSON.stringify(packageJson, null, '  '));
+      grunt.log.ok('package.json updated - ' + version);
+
+      exec([
+        'git add package.json && ',
+        'git commit -m "Update to next version for development (' + version + ')" && ',
+        'git push'
+      ].join(''), function(error, stdout, stderr) {
+        if (error) {
+          grunt.fatal('Error occurred while updating to next development version' + stderr);
+          asyncDone(false);
+        } else {
+          grunt.log.ok('Version updated for development ' + version);
+          asyncDone();
+        }
+      });
+    } else {
+      grunt.fatal('No development version found, use or restart grunt deploy');
+    }
   });
 
   grunt.registerTask('deploy', [
+    //'jshint',
+    //'jasmine_node',
     'prompt:deploy',
-    'deploy-version',
-    'deploy-tagname',
-    'deploy-nexus',
-    'deploy-next-version'
+    //'deploy-version',
+    //'deploy-tagname',
+    //'requirejs:install',
+    //'site',
+    'deploy-nexus'
+    //'deploy-next-version'
   ]);
 };
