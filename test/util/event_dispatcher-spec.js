@@ -276,7 +276,7 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
           dispatcher.on(/\d+/, function(){ order.push('on-reg'); }, null, 2);
           dispatcher.on('12345', function(){ order.push('on'); }, null, 3);
           dispatcher.dispatch('12345');
-          expect(order).toBe(['on-all', 'on-reg', 'on']);
+          expect(order).toEqual(['on-all', 'on-reg', 'on']);
         });
 
         it('won`t triggers if the type is not defined', function() {
