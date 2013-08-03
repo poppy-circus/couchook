@@ -2,7 +2,7 @@
   "name": "couchhook",
   "private": false,
   "description": "A tool to build scaleable applications.",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "homepage": "https://www.couchook.poppy-circus.de",
   "author": "poppy-circus",
   "contributors": [
