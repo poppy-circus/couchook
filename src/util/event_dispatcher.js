@@ -17,7 +17,8 @@ define(['../util/class_util'], function(classUtil) {
       type: type,
       listener: listener,
       scope: scope,
-      priority: options.priority || 0
+      priority: options.priority || 0,
+      once: !!options.once
     };
   };
 
@@ -102,6 +103,7 @@ define(['../util/class_util'], function(classUtil) {
    * The default priority is 0.
    *
    * @returns {EventDispatcher} the EventDispatcher reference
+   * @see EventDispatcher#once
    * @see EventDispatcher#off
    *
    * @name on
@@ -113,7 +115,34 @@ define(['../util/class_util'], function(classUtil) {
       return;
     }
     
-    this._addEventListener(type, listener, scope, {priority: priority});
+    this._addListener(type, listener, scope, {priority: priority});
+    return this;
+  };
+
+  /**
+   * Register an event listener function to an EventDispatcher object.
+   * Adding an event listener once became removed after receiving a signal one time.
+   *
+   * @param {String} type The type of the event.
+   * @param {function(Object, Object)} listener The listener function that is called
+   * when an event is dispatched.
+   * @param {Object=} scope  Spefifies the <i>this</i> reference in the listener funnction.
+   * @param {int=} priority The priority level of the event listener.
+   *
+   * @returns {EventDispatcher} the EventDispatcher reference
+   * @see EventDispatcher#on
+   * @see EventDispatcher#off
+   *
+   * @name on
+   * @function
+   * @memberOf EventDispatcher#
+   */
+  proto.once = function(type, listener, scope, priority) {
+    if(!type || !listener) {
+      return;
+    }
+
+    this._addListener(type, listener, scope, {priority: priority, once: true});
     return this;
   };
 
@@ -174,6 +203,10 @@ define(['../util/class_util'], function(classUtil) {
     for (var i = 0, len = events.length; i<len; i+=1) {
       event = events[i];
       event.listener.call(event.scope, payload, {target: this, type: type});
+
+      if (event.once) {
+        this.off(type, event.listener);
+      }
     }
 
     return events.length > 0;
@@ -218,9 +251,8 @@ define(['../util/class_util'], function(classUtil) {
    * @private
    * @ignore
    */
-  proto._addEventListener = function(type, listener, scope, options) {
+  proto._addListener = function(type, listener, scope, options) {
     var events = this.getListenerByType(type);
-    options = options || {};
 
     if (events.length === 0) {
       events = this._events[type] = [];

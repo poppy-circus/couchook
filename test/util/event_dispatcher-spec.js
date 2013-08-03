@@ -28,7 +28,7 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
           var fn = function(){};
           var scope = {};
           beforeEach(function() {
-            dispatcher.on('type', fn, scope, 10);
+            dispatcher.once('type', fn, scope, 10);
           });
 
           it('has a property `type`', function() {
@@ -45,6 +45,10 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
 
           it('has a property `priority`', function() {
             expect(dispatcher.getListenerByType('type')[0].priority).toBe(10);
+          });
+
+          it('has a property `once`', function() {
+            expect(dispatcher.getListenerByType('type')[0].once).toBe(true);
           });
         });
       });
@@ -107,6 +111,12 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
           expect(dispatcher.getListenerByType('type')[0].priority).toBe(1);
         });
 
+        it('sets the scope if defined', function() {
+          var scope = {};
+          dispatcher.once('type', function(){}, scope);
+          expect(dispatcher.getListenerByType('type')[0].scope).toBe(scope);
+        });
+
         it('sets the scope to the dispatcher reference if not defined', function() {
           dispatcher.on('type', function(){});
           expect(dispatcher.getListenerByType('type')[0].scope).toBe(dispatcher);
@@ -114,6 +124,70 @@ require(['src/util/event_dispatcher'], function(EventDispatcher) {
 
         it('returns the event dispatcher reference', function() {
           expect(dispatcher.on('type', function(){})).toBe(dispatcher);
+        });
+      });
+
+      describe('has a method `once`', function() {
+        it('listen to an event just for one time', function() {
+          var spy = jasmine.createSpy('listener');
+          dispatcher.once('type', spy);
+          dispatcher.dispatch('type');
+          dispatcher.dispatch('type');
+          expect(spy.callCount).toBe(1);
+        });
+
+        it('adds an event listener', function() {
+          dispatcher.once('type', function(){});
+          expect(dispatcher.hasListener('type')).toBe(true);
+        });
+
+        it('adds a special event listener type `*` to receive all dispatched events', function() {
+          dispatcher.once('*', function(){});
+          expect(dispatcher.hasListener('*')).toBe(true);
+        });
+
+        it('won`t add an event listener if the callback is not defined', function() {
+          dispatcher.once('type');
+          expect(dispatcher.hasListener('type')).toBe(false);
+        });
+
+        it('won`t add an event listener if the type is not defined', function() {
+          dispatcher.once();
+          expect(dispatcher.hasListener('type')).toBe(false);
+        });
+
+        it('won`t add an event listener twice', function() {
+          var fn = function(){};
+          dispatcher.once('type', fn);
+          dispatcher.once('type', fn);
+          expect(dispatcher.getListenerByType('type').length).toBe(1);
+        });
+
+        it('adds differnt event listeners for the same type', function() {
+          dispatcher.once('type', function(){});
+          dispatcher.once('type', function(){});
+          expect(dispatcher.getListenerByType('type').length).toBe(2);
+        });
+
+        it('sorts listener by priority', function() {
+          dispatcher.once('type', function(){}, null, 2);
+          dispatcher.once('type', function(){}, null, 1);
+          expect(dispatcher.getListenerByType('type')[0].priority).toBe(1);
+        });
+
+        it('sets the scope if defined', function() {
+          var scope = {};
+          dispatcher.once('type', function(){}, scope);
+          expect(dispatcher.getListenerByType('type')[0].scope).toBe(scope);
+        });
+
+        it('sets the scope to the dispatcher reference if not defined', function() {
+          dispatcher.once('type', function(){});
+          expect(dispatcher.getListenerByType('type')[0].scope).toBe(dispatcher);
+        });
+
+        it('returns the event dispatcher reference', function() {
+          expect(dispatcher.once('type', function(){})).toBe(dispatcher);
         });
       });
 
