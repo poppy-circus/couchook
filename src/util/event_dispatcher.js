@@ -21,6 +21,22 @@ define(['../util/class_util'], function(classUtil) {
     };
   };
 
+  var hasEvent = function(events, listener) {
+    var registered = false;
+
+    //check, if the event type has already a relationship to the listener
+    if (events.length > 0) {
+      for (var i = 0, len = events.length; i<len; i+=1) {
+        if (events[i].listener === listener) {
+          registered = true;
+          break;
+        }
+      }
+    }
+
+    return registered;
+  };
+
   //--------------------------------------------------------------------------
   //
   //  construct
@@ -97,25 +113,17 @@ define(['../util/class_util'], function(classUtil) {
       return;
     }
     
-    var registered = false; 
     var events = this.getListenerByType(type);
-    
-    //check, if the event type has already a relationship to the listener
-    if (events.length > 0) {
-      for (var i = 0, len = events.length; i<len; i+=1) {
-        if (events[i].listener === listener) {
-          registered = true;
-          break;
-        }
-      }
-    } else {
+
+    if (events.length === 0) {
       events = this._events[type] = [];
     }
 
-    if (!registered) { 
+    if (!hasEvent(events, listener)) {
       events.push(createEvent(type, listener, scope || this, priority));
       events.sort(sortOnPriority);
     }
+
     return this;
   };
 
