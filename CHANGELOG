@@ -1,1 +1,3 @@
-
+- Append docs by code coverage
+- Allow regular expressions to be acting as an event type
+- Introduce EventEmitter.once
