@@ -50,6 +50,18 @@ module.exports = function(grunt) {
       }
     },
 
+    copy: {
+      coverage: {
+        files: [
+          { src: ['**'], dest: 'doc/coverage', expand: true, cwd: 'coverage/lcov-report/'}
+        ]
+      }
+    },
+
+    clean: {
+      coverage: ['coverage']
+    },
+
     requirejs: {
       install: {
         options: {
@@ -71,6 +83,8 @@ module.exports = function(grunt) {
     }
   });
 
+  grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-jasmine-node');
   grunt.loadNpmTasks('grunt-jsdoc');
   grunt.loadNpmTasks('grunt-contrib-jshint');
@@ -95,6 +109,10 @@ module.exports = function(grunt) {
     });
 
     exec('npm test --coverage', function(error, stdout, stderr) {
+      grunt.task.run(
+        'copy:coverage',
+        'clean:coverage'
+      );
       grunt.log.ok('coverage report created');
     });
   });
