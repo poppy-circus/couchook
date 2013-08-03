@@ -3,3 +3,4 @@ doc
 coverage
 node_modules
 tmp
+.nexus
